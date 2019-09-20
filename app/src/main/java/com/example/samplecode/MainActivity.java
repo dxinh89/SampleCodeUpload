@@ -44,7 +44,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener, ProgressRequestBody.UploadCallbacks,NetworkStateReceiver.NetworkStateReceiverListener {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener, ProgressRequestBody.UploadCallbacks, NetworkStateReceiver.NetworkStateReceiverListener {
 
     static final String[] PERMISSIONS_STORAGE = new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE};
     static final int REQUEST_EXTERNAL_STORAGE = 601;
@@ -95,6 +95,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     }
 
+//    protected void aaa(){
+//        APIService apiService = RetrofitClientInstance.getRetrofitInstance().create(APIService.class);
+//        apiService.getUserDetails();
+//    }
+
     // Ham Upload------
     protected void doUpload(String token, String sessionId, String itemFilePath) {
 
@@ -111,7 +116,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         //creating our api
         APIService apiService = RetrofitClientInstance.getRetrofitInstance().create(APIService.class);
 
-        final Call<SimpleUploadResponse> call = apiService.upload(token, ctLen, ctRange, sessionId, body);
+        final Call<SimpleUploadResponse> call = apiService.upload1(token, ctLen, ctRange, sessionId, body);
         call.enqueue(new Callback<SimpleUploadResponse>() {
             @Override
             public void onResponse(Call<SimpleUploadResponse> call, Response<SimpleUploadResponse> response) {
@@ -148,23 +153,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Override
-    public void onProgressUpdate(int uploaded) {
+    public void onProgressUpdate(long uploaded) {
         //progressBar.setProgress(percentage);
         int percentage = (int) (100 * (mAllUploaded + uploaded) / mTotalLeng);
         Log.i("UPLOAD", "Loading..." + percentage + "%");
     }
 
-    @Override
-    public void onError() {
-
-    }
-
-    @Override
-    public void onFinish() {
-        //progressBar.setProgress(100);
-        Log.i("UPLOAD", "FINISH...100%");
-
-    }
 
     @Override
     public void onClick(View v) {
@@ -181,7 +175,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 Log.i("UPLOAD", "size=" + totalSize + "-md5=" + md5);
 
                 APIService apiService = RetrofitClientInstance.getRetrofitInstance().create(APIService.class);
-                apiService.createSession(DEFAULT_TEST_TOKEN, new SessionBody(md5, totalSize)).enqueue(new Callback<SessionResponse>() {
+                apiService.createSession1(DEFAULT_TEST_TOKEN, new SessionBody(md5, totalSize)).enqueue(new Callback<SessionResponse>() {
                     @Override
                     public void onResponse(Call<SessionResponse> call, Response<SessionResponse> response) {
                         if (response.isSuccessful()) {

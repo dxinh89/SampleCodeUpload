@@ -46,18 +46,18 @@ public class SampleActivity extends AppCompatActivity {
 
         String zipFileDir = getFilesDir().toString();
 
-        UploadHelper.uploadFeedbackAttachments(filePathList, zipFileDir)
+        UploadHelper.uploadFeedbackAttachments(filePathList,zipFileDir)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Observer<UploadHelper.UploadProgress>() {
                     @Override
                     public void onSubscribe(Disposable d) {
                         uploadDisposable = d;
-                        Log.v("test1", "onSubscribe");
+                        Log.i("UPLOAD", "onSubscribe");
                     }
 
                     @Override
                     public void onNext(UploadHelper.UploadProgress uploadProgress) {
-                        Log.v("test1", Thread.currentThread().getName() + " onNext: " + uploadProgress.toString());
+                        Log.i("UPLOAD", Thread.currentThread().getName() + " onNext: " + uploadProgress.toString());
                     }
 
                     @Override
@@ -67,12 +67,12 @@ public class SampleActivity extends AppCompatActivity {
 //
 //                            }
                         }
-                        Log.v("test1", "onError: " + e.getMessage());
+                        Log.i("UPLOAD", "onError: " + e.getMessage());
                     }
 
                     @Override
                     public void onComplete() {
-                        Log.v("test1", Thread.currentThread().getName() + " onComplete");
+                        Log.i("UPLOAD", Thread.currentThread().getName() + " onComplete");
 
                     }
                 });

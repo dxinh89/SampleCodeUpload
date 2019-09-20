@@ -66,7 +66,7 @@ public class SplitFileUtils {
                     success = folder.mkdirs();
                 }
                 if (success) {
-                    String itemPath = dir + "/split/file_" + String.format(Locale.US, "%03d", count); ///data/user/0/com.example.samplecode/files
+                    String itemPath = dir + "/split/file_" + String.format(Locale.US, "%03d", count); // /data/user/0/com.example.samplecode/files
                     out = new FileOutputStream(new File(itemPath));
 
                     partFilePaths.add(itemPath);
