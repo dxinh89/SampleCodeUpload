@@ -16,23 +16,23 @@ public class ProgressRequestBody extends RequestBody {
     private File mFile;
     private String mPath;
     private UploadCallbacks mListener;
-    private String content_type;
+    private String mContent_type;
 
     private static final int DEFAULT_BUFFER_SIZE = 2048;
 
     public interface UploadCallbacks {
-        void onProgressUpdate(long percentage);
+        void onProgressUpdate(long currentUploaded);
     }
 
     public ProgressRequestBody(final File file, String content_type, final UploadCallbacks listener) {
-        this.content_type = content_type;
         mFile = file;
+        this.mContent_type = content_type;
         mListener = listener;
     }
 
     @Override
     public MediaType contentType() {
-        return MediaType.parse(content_type + "/*");
+        return MediaType.parse(mContent_type + "/*");
     }
 
     @Override

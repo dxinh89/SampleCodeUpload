@@ -39,4 +39,8 @@ public class SimpleUploadResponse {
         this.description = description;
     }
 
+    @Override
+    public String toString() {
+        return "Code=" + getCode() + "-Message=" + getMessage() + "-Description=" + getDescription();
+    }
 }

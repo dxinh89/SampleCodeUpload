@@ -4,6 +4,7 @@ import com.example.samplecode.models.SessionBody;
 import com.example.samplecode.models.SessionResponse;
 import com.example.samplecode.models.SimpleUploadResponse;
 
+import io.reactivex.Observable;
 import io.reactivex.Single;
 import okhttp3.FormBody;
 import okhttp3.MultipartBody;
@@ -14,6 +15,7 @@ import retrofit2.Response;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
+import retrofit2.http.Headers;
 import retrofit2.http.Multipart;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
@@ -46,9 +48,11 @@ public interface APIService {
             @Part MultipartBody.Part imageFile
     );
 
+
     @Multipart
-    @POST("api/Upload/UploadFile/{sessionId}")
-    Single<Response<SimpleUploadResponse>> upload111(RequestBody b);
+    @PUT("api/Upload/UploadFile/{sessionId}")
+    Call<SimpleUploadResponse> upload111(@Header("token") String token, @Header("ContentLength") long ctLen, @Header("Content-Range") String ctRange,
+                                               @Path("sessionId") String sessionId, @Part MultipartBody.Part b);  //@Body RequestBody b
 
 
 //    @GET("users")

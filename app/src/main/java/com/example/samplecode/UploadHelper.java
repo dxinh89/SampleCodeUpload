@@ -65,8 +65,9 @@ public class UploadHelper {
                     public ObservableSource<UploadProgress> apply(List<String> splitFileList) throws Exception {
                         return Observable.create(new ObservableOnSubscribe<UploadProgress>() {
                             Disposable lastUploadDisposable;
-                            int totalSize = 6000;
-                            int uploaded = 0;
+                            long totalSize = 6000;
+                            long uploaded = 0;
+                            long partBytes = 0;
 
                             int indexFileUploaded = 0;
                             int maxIndex = splitFileList.size();
@@ -90,49 +91,48 @@ public class UploadHelper {
 
                                 Log.i("UPLOAD", "thread bat dau upload: " + Thread.currentThread().getName());
 
-//                                    for (int i = 0; i < splitFileList.size(); i++)
-//                                        Log.i("UPLOAD", "Gia tri mang= " + splitFileList.get(i));
-
-                                //getOrCreateSession ----
-                                createSession();
+//                              for (int i = 0; i < splitFileList.size(); i++) Log.i("UPLOAD", "Gia tri mang= " + splitFileList.get(i)); //getOrCreateSession ----//createSession();
 
                                 for (; indexFileUploaded < maxIndex; indexFileUploaded++) {
                                     if (!emitter.isDisposed()) {
 
                                         lastUploadDisposable = uploadFile(splitFileList.get(indexFileUploaded), new ProgressCallback() {
                                             @Override
-                                            public void onProgressChanged(long uploadedBytes) {
+                                            public void onProgressChanged(long uploadedBytes/*, long currentPartBytes*/) {
+                                                //partBytes = currentPartBytes;
                                                 uploaded += uploadedBytes;
-                                                Log.i("UPLOAD", "--change=" + uploaded);
-                                                emitter.onNext(new UploadProgress(uploaded, totalSize));
+                                                //Log.i("UPLOAD", "--change=" + (uploaded + uploadedBytes));
+                                                emitter.onNext(new UploadProgress((uploaded), totalSize));
+                                                Log.i("UPLOAD", "--change=");
                                             }
-                                        })
-                                                .retry(new Predicate<Throwable>() {
-                                                    int countRetry = 0;
-                                                    final int maxRetry = 3;
+                                        }).retry(new Predicate<Throwable>() {
+                                            int countRetry = 0;
+                                            final int maxRetry = 3;
 
-                                                    @Override
-                                                    public boolean test(Throwable throwable) throws Exception {
-                                                        //trong trường hợp cancel (lastUploadDisposable.dispose();) thì cũng gây ra error nên cần kiểm tra xem throwable có phải do cancel ko
-                                                        Thread.sleep(500);
-                                                        return countRetry++ < maxRetry && !emitter.isDisposed();
-                                                    }
-                                                })
-                                                .subscribe(new Consumer<SimpleUploadResponse>() {
-                                                    @Override
-                                                    public void accept(SimpleUploadResponse result) throws Exception {
+                                            @Override
+                                            public boolean test(Throwable throwable) throws Exception {
+                                                //trong trường hợp cancel (lastUploadDisposable.dispose();) thì cũng gây ra error nên cần kiểm tra xem throwable có phải do cancel ko
+                                                Thread.sleep(500);
+                                                return countRetry++ < maxRetry && !emitter.isDisposed();
+                                            }
+                                        }).subscribe(new Consumer<SimpleUploadResponse>() {
+                                            @Override
+                                            public void accept(SimpleUploadResponse result) throws Exception {
+                                                Log.i("UPLOAD", "Ket qua= " + result.toString());
+//                                                        if (result.getCode() == 0) {
+//                                                            uploaded += partBytes;
+//                                                        }
 
+                                            }
+                                        }, error -> {
+                                            Log.i("UPLOAD", "ERR!!!!!!");
+                                            //trong trường hợp cancel (lastUploadDisposable.dispose();) thì cũng gây ra error nên cần kiểm tra xem error có phải do cancel ko
+                                            if (!emitter.isDisposed()) {
+                                                //trường hợp  cancel
+                                            } else {
 
-                                                    }
-                                                }, error -> {
-                                                    //trong trường hợp cancel (lastUploadDisposable.dispose();) thì cũng gây ra error nên cần kiểm tra xem error có phải do cancel ko
-                                                    if (!emitter.isDisposed()) {
-                                                        //trường hợp  cancel
-                                                    } else {
-
-                                                    }
-                                                })
-                                        ;
+                                            }
+                                        });
                                     }
                                 }
 
@@ -142,7 +142,6 @@ public class UploadHelper {
                     }
                 });
     }
-
 
     private static Completable zipMultiFile(@NonNull List<String> filePathList, @NonNull String zipFileDir) {
         return Completable.fromAction(() -> {
@@ -270,53 +269,28 @@ public class UploadHelper {
         });
     }
 
-    private static Single<SimpleUploadResponse> uploadFile(@NonNull String filePath, ProgressCallback progressCallback) {
+    private static Observable<SimpleUploadResponse> uploadFile(@NonNull String filePath, ProgressCallback progressCallback) {
 
-        return Single.fromCallable(() -> {
+        final File file = new File(filePath);
+        long size = file.length();
+        Log.i("UPLOAD", "INTO UPLOAD FILE>>>" + filePath + "size:" + size);
 
-            final File file = new File(filePath);
-            long size = file.length();
+        APIService apiService = RetrofitClientInstance.getRetrofitInstance().create(APIService.class);
+        Log.i("UPLOAD", "INTO UPLOAD FILE<<<");
 
-            Log.i("UPLOAD", "INTO UPLOAD FILE>>>" + filePath);
+        String token = "D2-D8-A5-C2-12-48-BC-29-11-D5-34-39-76-9F-D7-1E-9F-F1-DB-92";
+        String ctRange = "bytes 0-" + (size - 1) + "/397152";
+        String sessionId = "B7B98AFC092319091527511163";
 
-            RequestBody requestBody = RequestBody.create(MediaType.parse("*/*"), file);
-            MultipartBody.Part body = MultipartBody.Part.createFormData("file", file.getName(), requestBody);
+        Observable<SimpleUploadResponse> tResponse = apiService.upload111(token, size, ctRange, sessionId, MultipartBody.Part.createFormData("filedbody", file.getName(), new ProgressRequestBody(file, "*", new ProgressRequestBody.UploadCallbacks() {
+            @Override
+            public void onProgressUpdate(long currentUploaded) {
+                Log.i("UPLOAD", "------------Load%:" + currentUploaded);
+                progressCallback.onProgressChanged(currentUploaded/*, size*/);
+            }
+        })));
 
-            APIService apiService = RetrofitClientInstance.getRetrofitInstance().create(APIService.class);
-            Single<Response<SimpleUploadResponse>> responseSingle = apiService.upload("D2-D8-A5-C2-12-48-BC-29-11-D5-34-39-76-9F-D7-1E-9F-F1-DB-92", size, "bytes 0-" + (size - 1) + "/6000", "F4D47F65091819032928670137", body);
-            Log.i("UPLOAD", "INTO UPLOAD FILE<<<");
-
-
-            //SimpleUploadResponse simpleUploadResponse;
-
-
-            /*apiService.upload1("D2-D8-A5-C2-12-48-BC-29-11-D5-34-39-76-9F-D7-1E-9F-F1-DB-92", size, "bytes 0-" + (size - 1) + "/6000", "F4D47F65091819032928670137", body).enqueue(new Callback<SimpleUploadResponse>() {
-                @Override
-                public void onResponse(Call<SimpleUploadResponse> call, Response<SimpleUploadResponse> response) {
-                    if (response.isSuccessful()) {
-                        if (response.body() != null) {
-                            String mSessionId = response.body().getDescription(); //"F4D47F65091619091550679408";
-                            Log.i("UPLOAD", "SSID=" + mSessionId);
-
-                        }
-                    }
-                }
-
-                @Override
-                public void onFailure(Call<SimpleUploadResponse> call, Throwable t) {
-                    Log.i("UPLOAD", "SSID=" + t.getMessage());
-                }
-            });*/
-            apiService.upload111(new ProgressRequestBody(new File(""), "", new ProgressRequestBody.UploadCallbacks() {
-                @Override
-                public void onProgressUpdate(long percentage) {
-
-                }
-            }));
-
-            return new SimpleUploadResponse();
-
-        });
+        return tResponse.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
     }
 
     static class UploadChunkResponse {
@@ -373,6 +347,6 @@ public class UploadHelper {
     }
 
     interface ProgressCallback {
-        void onProgressChanged(long uploadedBytes/*, long totalBytes*/);
+        void onProgressChanged(long uploadedBytes/*, long currentPartBytes*/);
     }
 }
