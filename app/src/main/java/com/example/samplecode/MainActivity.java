@@ -116,40 +116,40 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         //creating our api
         APIService apiService = RetrofitClientInstance.getRetrofitInstance().create(APIService.class);
 
-        final Call<SimpleUploadResponse> call = apiService.upload1(token, ctLen, ctRange, sessionId, body);
-        call.enqueue(new Callback<SimpleUploadResponse>() {
-            @Override
-            public void onResponse(Call<SimpleUploadResponse> call, Response<SimpleUploadResponse> response) {
-
-                if (response.isSuccessful()) {
-                    if (response.body() != null && response.body().getCode() == 0) {
-                        String s = response.body().getMessage() + ": " + response.body().getDescription();
-                        Log.i("UPLOAD", s);
-
-                        mAllUploaded += file.length();
-                        currentPart++;
-                        if (currentPart < partFilePaths.size())
-                            doUpload(DEFAULT_TEST_TOKEN, mSessionId, partFilePaths.get(currentPart)); //đệ quy
-                        else if (currentPart == partFilePaths.size()) {
-                            //get link file
-                            String linkFile = response.body().getDescription();
-                            Log.i("UPLOAD", "Link file =" + linkFile);
-                            mAllUploaded = 0;
-                        }
-                    }
-                } else {
-                    mCountRetryUpload++;
-                    if (mCountRetryUpload <= 2)
-                        doUpload(DEFAULT_TEST_TOKEN, mSessionId, partFilePaths.get(currentPart));
-                }
-
-            }
-
-            @Override
-            public void onFailure(Call<SimpleUploadResponse> call, Throwable t) {
-                Log.i("UPLOAD", "=====LOI KET NOI" + t.getMessage());
-            }
-        });
+//        final Call<SimpleUploadResponse> call = apiService.upload1(token, ctLen, ctRange, sessionId, body);
+//        call.enqueue(new Callback<SimpleUploadResponse>() {
+//            @Override
+//            public void onResponse(Call<SimpleUploadResponse> call, Response<SimpleUploadResponse> response) {
+//
+//                if (response.isSuccessful()) {
+//                    if (response.body() != null && response.body().getCode() == 0) {
+//                        String s = response.body().getMessage() + ": " + response.body().getDescription();
+//                        Log.i("UPLOAD", s);
+//
+//                        mAllUploaded += file.length();
+//                        currentPart++;
+//                        if (currentPart < partFilePaths.size())
+//                            doUpload(DEFAULT_TEST_TOKEN, mSessionId, partFilePaths.get(currentPart)); //đệ quy
+//                        else if (currentPart == partFilePaths.size()) {
+//                            //get link file
+//                            String linkFile = response.body().getDescription();
+//                            Log.i("UPLOAD", "Link file =" + linkFile);
+//                            mAllUploaded = 0;
+//                        }
+//                    }
+//                } else {
+//                    mCountRetryUpload++;
+//                    if (mCountRetryUpload <= 2)
+//                        doUpload(DEFAULT_TEST_TOKEN, mSessionId, partFilePaths.get(currentPart));
+//                }
+//
+//            }
+//
+//            @Override
+//            public void onFailure(Call<SimpleUploadResponse> call, Throwable t) {
+//                Log.i("UPLOAD", "=====LOI KET NOI" + t.getMessage());
+//            }
+//        });
     }
 
     @Override

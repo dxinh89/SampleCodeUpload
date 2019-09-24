@@ -96,43 +96,43 @@ public class UploadHelper {
                                 for (; indexFileUploaded < maxIndex; indexFileUploaded++) {
                                     if (!emitter.isDisposed()) {
 
-                                        lastUploadDisposable = uploadFile(splitFileList.get(indexFileUploaded), new ProgressCallback() {
-                                            @Override
-                                            public void onProgressChanged(long uploadedBytes/*, long currentPartBytes*/) {
-                                                //partBytes = currentPartBytes;
-                                                uploaded += uploadedBytes;
-                                                //Log.i("UPLOAD", "--change=" + (uploaded + uploadedBytes));
-                                                emitter.onNext(new UploadProgress((uploaded), totalSize));
-                                                Log.i("UPLOAD", "--change=");
-                                            }
-                                        }).retry(new Predicate<Throwable>() {
-                                            int countRetry = 0;
-                                            final int maxRetry = 3;
-
-                                            @Override
-                                            public boolean test(Throwable throwable) throws Exception {
-                                                //trong trường hợp cancel (lastUploadDisposable.dispose();) thì cũng gây ra error nên cần kiểm tra xem throwable có phải do cancel ko
-                                                Thread.sleep(500);
-                                                return countRetry++ < maxRetry && !emitter.isDisposed();
-                                            }
-                                        }).subscribe(new Consumer<SimpleUploadResponse>() {
-                                            @Override
-                                            public void accept(SimpleUploadResponse result) throws Exception {
-                                                Log.i("UPLOAD", "Ket qua= " + result.toString());
-//                                                        if (result.getCode() == 0) {
-//                                                            uploaded += partBytes;
-//                                                        }
-
-                                            }
-                                        }, error -> {
-                                            Log.i("UPLOAD", "ERR!!!!!!");
-                                            //trong trường hợp cancel (lastUploadDisposable.dispose();) thì cũng gây ra error nên cần kiểm tra xem error có phải do cancel ko
-                                            if (!emitter.isDisposed()) {
-                                                //trường hợp  cancel
-                                            } else {
-
-                                            }
-                                        });
+//                                        lastUploadDisposable = uploadFile(splitFileList.get(indexFileUploaded), new ProgressCallback() {
+//                                            @Override
+//                                            public void onProgressChanged(long uploadedBytes/*, long currentPartBytes*/) {
+//                                                //partBytes = currentPartBytes;
+//                                                uploaded += uploadedBytes;
+//                                                //Log.i("UPLOAD", "--change=" + (uploaded + uploadedBytes));
+//                                                emitter.onNext(new UploadProgress((uploaded), totalSize));
+//                                                Log.i("UPLOAD", "--change=");
+//                                            }
+//                                        }).retry(new Predicate<Throwable>() {
+//                                            int countRetry = 0;
+//                                            final int maxRetry = 3;
+//
+//                                            @Override
+//                                            public boolean test(Throwable throwable) throws Exception {
+//                                                //trong trường hợp cancel (lastUploadDisposable.dispose();) thì cũng gây ra error nên cần kiểm tra xem throwable có phải do cancel ko
+//                                                Thread.sleep(500);
+//                                                return countRetry++ < maxRetry && !emitter.isDisposed();
+//                                            }
+//                                        }).subscribe(new Consumer<SimpleUploadResponse>() {
+//                                            @Override
+//                                            public void accept(SimpleUploadResponse result) throws Exception {
+//                                                Log.i("UPLOAD", "Ket qua= " + result.toString());
+////                                                        if (result.getCode() == 0) {
+////                                                            uploaded += partBytes;
+////                                                        }
+//
+//                                            }
+//                                        }, error -> {
+//                                            Log.i("UPLOAD", "ERR!!!!!!");
+//                                            //trong trường hợp cancel (lastUploadDisposable.dispose();) thì cũng gây ra error nên cần kiểm tra xem error có phải do cancel ko
+//                                            if (!emitter.isDisposed()) {
+//                                                //trường hợp  cancel
+//                                            } else {
+//
+//                                            }
+//                                        });
                                     }
                                 }
 
@@ -247,51 +247,51 @@ public class UploadHelper {
             Log.i("UPLOAD", "----------- Vao tao session");
 
             APIService apiService = RetrofitClientInstance.getRetrofitInstance().create(APIService.class);
-            Single<Response<SessionResponse>> responseSingle = apiService.createSession("D2-D8-A5-C2-12-48-BC-29-11-D5-34-39-76-9F-D7-1E-9F-F1-DB-92", new SessionBody("", 6000L));
-            responseSingle.subscribeOn(Schedulers.io()).subscribeOn(AndroidSchedulers.mainThread()).subscribe(new SingleObserver<Response<SessionResponse>>() {
-                @Override
-                public void onSubscribe(Disposable d) {
-                    Log.i("UPLOAD", "-----------A");
-                }
-
-                @Override
-                public void onSuccess(Response<SessionResponse> sessionResponseResponse) {
-                    Log.i("UPLOAD", "-----------B");
-                }
-
-                @Override
-                public void onError(Throwable e) {
-                    Log.i("UPLOAD", "-----------C");
-                }
-            });
+//            Single<Response<SessionResponse>> responseSingle = apiService.createSession("D2-D8-A5-C2-12-48-BC-29-11-D5-34-39-76-9F-D7-1E-9F-F1-DB-92", new SessionBody("", 6000L));
+//            responseSingle.subscribeOn(Schedulers.io()).subscribeOn(AndroidSchedulers.mainThread()).subscribe(new SingleObserver<Response<SessionResponse>>() {
+//                @Override
+//                public void onSubscribe(Disposable d) {
+//                    Log.i("UPLOAD", "-----------A");
+//                }
+//
+//                @Override
+//                public void onSuccess(Response<SessionResponse> sessionResponseResponse) {
+//                    Log.i("UPLOAD", "-----------B");
+//                }
+//
+//                @Override
+//                public void onError(Throwable e) {
+//                    Log.i("UPLOAD", "-----------C");
+//                }
+//            });
 
             return new SessionResponse();
         });
     }
 
-    private static Observable<SimpleUploadResponse> uploadFile(@NonNull String filePath, ProgressCallback progressCallback) {
-
-        final File file = new File(filePath);
-        long size = file.length();
-        Log.i("UPLOAD", "INTO UPLOAD FILE>>>" + filePath + "size:" + size);
-
-        APIService apiService = RetrofitClientInstance.getRetrofitInstance().create(APIService.class);
-        Log.i("UPLOAD", "INTO UPLOAD FILE<<<");
-
-        String token = "D2-D8-A5-C2-12-48-BC-29-11-D5-34-39-76-9F-D7-1E-9F-F1-DB-92";
-        String ctRange = "bytes 0-" + (size - 1) + "/397152";
-        String sessionId = "B7B98AFC092319091527511163";
-
-        Observable<SimpleUploadResponse> tResponse = apiService.upload111(token, size, ctRange, sessionId, MultipartBody.Part.createFormData("filedbody", file.getName(), new ProgressRequestBody(file, "*", new ProgressRequestBody.UploadCallbacks() {
-            @Override
-            public void onProgressUpdate(long currentUploaded) {
-                Log.i("UPLOAD", "------------Load%:" + currentUploaded);
-                progressCallback.onProgressChanged(currentUploaded/*, size*/);
-            }
-        })));
-
-        return tResponse.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
-    }
+//    private static Observable<SimpleUploadResponse> uploadFile(@NonNull String filePath, ProgressCallback progressCallback) {
+//
+//        final File file = new File(filePath);
+//        long size = file.length();
+//        Log.i("UPLOAD", "INTO UPLOAD FILE>>>" + filePath + "size:" + size);
+//
+//        APIService apiService = RetrofitClientInstance.getRetrofitInstance().create(APIService.class);
+//        Log.i("UPLOAD", "INTO UPLOAD FILE<<<");
+//
+//        String token = "D2-D8-A5-C2-12-48-BC-29-11-D5-34-39-76-9F-D7-1E-9F-F1-DB-92";
+//        String ctRange = "bytes 0-" + (size - 1) + "/397152";
+//        String sessionId = "B7B98AFC092319091527511163";
+//
+////        Observable<SimpleUploadResponse> tResponse = apiService.upload111(token, size, ctRange, sessionId, MultipartBody.Part.createFormData("filedbody", file.getName(), new ProgressRequestBody(file, "*", new ProgressRequestBody.UploadCallbacks() {
+////            @Override
+////            public void onProgressUpdate(long currentUploaded) {
+////                Log.i("UPLOAD", "------------Load%:" + currentUploaded);
+////                progressCallback.onProgressChanged(currentUploaded/*, size*/);
+////            }
+////        })));
+//
+//        return tResponse.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
+//    }
 
     static class UploadChunkResponse {
     }

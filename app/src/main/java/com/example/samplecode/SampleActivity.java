@@ -46,36 +46,69 @@ public class SampleActivity extends AppCompatActivity {
 
         String zipFileDir = getFilesDir().toString();
 
-        UploadHelper.uploadFeedbackAttachments(filePathList,zipFileDir)
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Observer<UploadHelper.UploadProgress>() {
-                    @Override
-                    public void onSubscribe(Disposable d) {
-                        uploadDisposable = d;
-                        Log.i("UPLOAD", "onSubscribe");
-                    }
+        ///-----------------------
+        List<String> lstFileUp = new ArrayList<>();
+        for (int i = 0; i < 8; i++) {
+            lstFileUp.add("/data/user/0/com.example.samplecode/files/split/file_00" + i);
+        }
 
-                    @Override
-                    public void onNext(UploadHelper.UploadProgress uploadProgress) {
-                        Log.i("UPLOAD", Thread.currentThread().getName() + " onNext: " + uploadProgress.toString());
-                    }
 
-                    @Override
-                    public void onError(Throwable e) {
-                        if (e instanceof GeneralException) {
-//                            if(((GeneralException) e).code == 1){
+
+        DemoUp.uploadFiles(lstFileUp).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<UploadHelper.UploadProgress>() {
+            @Override
+            public void onSubscribe(Disposable d) {
+                uploadDisposable = d;
+                Log.i("UPLOAD", "onSubscribe");
+            }
+
+            @Override
+            public void onNext(UploadHelper.UploadProgress uploadProgress) {
+                Log.i("UPLOAD", Thread.currentThread().getName() + " onNext: " + uploadProgress.toString());
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                Log.i("UPLOAD", "onError: " + e.getMessage());
+            }
+
+            @Override
+            public void onComplete() {
+                Log.i("UPLOAD", Thread.currentThread().getName() + " onComplete");
+            }
+        });
+
+
+//        UploadHelper.uploadFeedbackAttachments(filePathList,zipFileDir)
+//                .observeOn(AndroidSchedulers.mainThread())
+//                .subscribe(new Observer<UploadHelper.UploadProgress>() {
+//                    @Override
+//                    public void onSubscribe(Disposable d) {
+//                        uploadDisposable = d;
+//                        Log.i("UPLOAD", "onSubscribe");
+//                    }
 //
-//                            }
-                        }
-                        Log.i("UPLOAD", "onError: " + e.getMessage());
-                    }
+//                    @Override
+//                    public void onNext(UploadHelper.UploadProgress uploadProgress) {
+//                        Log.i("UPLOAD", Thread.currentThread().getName() + " onNext: " + uploadProgress.toString());
+//                    }
+//
+//                    @Override
+//                    public void onError(Throwable e) {
+//                        if (e instanceof GeneralException) {
+////                            if(((GeneralException) e).code == 1){
+////
+////                            }
+//                        }
+//                        Log.i("UPLOAD", "onError: " + e.getMessage());
+//                    }
+//
+//                    @Override
+//                    public void onComplete() {
+//                        Log.i("UPLOAD", Thread.currentThread().getName() + " onComplete");
+//
+//                    }
+//                });
 
-                    @Override
-                    public void onComplete() {
-                        Log.i("UPLOAD", Thread.currentThread().getName() + " onComplete");
-
-                    }
-                });
     }
 
     static class GeneralException extends Exception {
