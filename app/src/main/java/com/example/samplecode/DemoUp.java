@@ -76,6 +76,7 @@ public class DemoUp {
                     if (sessionId == null)
                         sessionId = infoResponse.getSessionId();
                     Log.i("ss", "SSID:" + sessionId);
+                    Log.i("retry", "Gia tri i=" + i);
 
                     String path = lstFile.get(i);
                     lastCall = uploadSingleFile(sessionId, path, realTotalUploaded, total, new UploadHelper.ProgressCallback() {
@@ -96,16 +97,19 @@ public class DemoUp {
                         if (simpleUploadResponse == null || simpleUploadResponse.getCode() != 0) {
 
                             Thread.sleep(500);
-                            emitter.onError(new Throwable());
+                            //emitter.onError(new Throwable());
 
                             countRetry++;
                             Log.i("retry", "Lan thu:" + countRetry);
 
                             if (countRetry < maxRetry) {
                                 Log.i("retry", "Continue index:" + i + "- " + countRetry);
+                                Log.i("retry", "ctr:" + i + "- " + realTotalUploaded);
                                 i--;
-                            } else
+                            } else {
+                                emitter.onError(new Throwable("Reupload Thất bại"));
                                 break;
+                            }
                         } else {
                             countRetry = 0;
 
@@ -116,7 +120,6 @@ public class DemoUp {
                         }
                     } catch (Exception err) {
                         Thread.sleep(500);
-                        emitter.onError(new Throwable());
 
                         countRetry++;
                         Log.i("retry", "Lan thu:" + countRetry);
@@ -124,8 +127,10 @@ public class DemoUp {
                         if (countRetry < maxRetry) {
                             Log.i("retry", "Continue index:" + i + "- " + countRetry);
                             i--;
-                        } else
+                        } else {
+                            emitter.onError(new Throwable(err.getMessage()));
                             break;
+                        }
                     }
                 }
                 emitter.onComplete();
