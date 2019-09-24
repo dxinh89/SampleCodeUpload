@@ -19,6 +19,7 @@ import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
 import io.reactivex.ObservableOnSubscribe;
 import io.reactivex.Single;
+import io.reactivex.functions.Cancellable;
 import io.reactivex.schedulers.Schedulers;
 import okhttp3.MultipartBody;
 import retrofit2.Call;
@@ -30,15 +31,18 @@ public class DemoUp {
 
     public static Observable<UploadHelper.UploadProgress> uploadFiles(final List<String> lstFile) {
         return Observable.create(new ObservableOnSubscribe<UploadHelper.UploadProgress>() {
-            int totalUploaded = 0;
+            long totalUploaded = 0;
+            long realTotalUploaded = 0;
             int previousTotal;
-            Call lastCall;
+            Call<SimpleUploadResponse> lastCall;
 
             String sessionId = null;
 
             @Override
             public void subscribe(ObservableEmitter<UploadHelper.UploadProgress> emitter) throws Exception {
                 long total = 0;
+                int countRetry = 0;
+                final int maxRetry = 3;
 
                 for (String path : lstFile) {
                     total += (new File(path).length());
@@ -46,8 +50,16 @@ public class DemoUp {
 
                 final long totalSize = total;
 
-                emitter.setCancellable(() -> lastCall.cancel());
-                for (String path : lstFile) {
+                emitter.setCancellable(new Cancellable() {
+                    @Override
+                    public void cancel() throws Exception {
+                        if (lastCall != null)
+                            lastCall.cancel();
+                    }
+                });
+
+                int maxSize = lstFile.size();
+                for (int i = 0; i < maxSize; i++) {
                     if (emitter.isDisposed()) {
                         break;
                     }
@@ -55,17 +67,18 @@ public class DemoUp {
 
                     SessionInfoResponse infoResponse = checkOrCreate(token, sessionId, totalSize).blockingGet();
 
-                    long expirateTime = Long.valueOf(infoResponse.getExpirationDateTime());
+                    long expirationTime = Long.valueOf(infoResponse.getExpirationDateTime());
                     long currentTime = System.currentTimeMillis() / 1000L;
 
-                    if (currentTime > expirateTime)
+                    if (currentTime > expirationTime)
                         sessionId = null;
 
                     if (sessionId == null)
                         sessionId = infoResponse.getSessionId();
                     Log.i("ss", "SSID:" + sessionId);
 
-                    lastCall = uploadSingleFile(sessionId, path, totalUploaded, total, new UploadHelper.ProgressCallback() {
+                    String path = lstFile.get(i);
+                    lastCall = uploadSingleFile(sessionId, path, realTotalUploaded, total, new UploadHelper.ProgressCallback() {
                         @Override
                         public void onProgressChanged(long uploadedBytes) {
                             totalUploaded += (uploadedBytes - previousTotal);
@@ -74,15 +87,46 @@ public class DemoUp {
                             emitter.onNext(new UploadHelper.UploadProgress(totalUploaded, totalSize));
                         }
                     });
-                    Response response = lastCall.execute();
-                    SimpleUploadResponse simpleUploadResponse = (SimpleUploadResponse) response.body();
-                    if (simpleUploadResponse == null || simpleUploadResponse.getCode() != 0) {
-                        emitter.onComplete();
+
+                    try {
+                        Response response = lastCall.execute();
+                        SimpleUploadResponse simpleUploadResponse = (SimpleUploadResponse) response.body();
+
+                        //RETRY
+                        if (simpleUploadResponse == null || simpleUploadResponse.getCode() != 0) {
+
+                            Thread.sleep(500);
+                            emitter.onError(new Throwable());
+
+                            countRetry++;
+                            Log.i("retry", "Lan thu:" + countRetry);
+
+                            if (countRetry < maxRetry) {
+                                Log.i("retry", "Continue index:" + i + "- " + countRetry);
+                                i--;
+                            } else
+                                break;
+                        } else {
+                            countRetry = 0;
+
+                            Log.i("res", "MSG:" + simpleUploadResponse.toString());
+                            totalUploaded += (new File(path).length() - previousTotal);
+                            realTotalUploaded = totalUploaded;
+                            Log.i("total", "total=:" + totalUploaded + "-real:" + realTotalUploaded);
+                        }
+                    } catch (Exception err) {
+                        Thread.sleep(500);
+                        emitter.onError(new Throwable());
+
+                        countRetry++;
+                        Log.i("retry", "Lan thu:" + countRetry);
+
+                        if (countRetry < maxRetry) {
+                            Log.i("retry", "Continue index:" + i + "- " + countRetry);
+                            i--;
+                        } else
+                            break;
                     }
-
-                    Log.i("UPLOAD", "MSG:" + simpleUploadResponse.toString());
-
-                    totalUploaded += (new File(path).length() - previousTotal);
                 }
                 emitter.onComplete();
             }
@@ -92,10 +136,9 @@ public class DemoUp {
     private static Call<SimpleUploadResponse> uploadSingleFile(String sessionId, @NonNull String filePath, long totalUploaded, long totalSize, UploadHelper.ProgressCallback progressCallback) {
         final File file = new File(filePath);
         long size = file.length();
-        Log.i("UPLOAD", "INTO UPLOAD FILE>>>" + filePath + "size:" + size);
 
         APIService apiService = RetrofitClientInstance.getRetrofitInstance().create(APIService.class);
-        Log.i("UPLOAD", "INTO UPLOAD FILE<<<");
+        Log.i("UPLOAD", "INTO UPLOAD FILE...");
 
         String ctRange = "bytes " + totalUploaded + "-" + (totalUploaded + size - 1) + "/" + totalSize;
         Log.i("ctr", ctRange);
