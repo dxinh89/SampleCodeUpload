@@ -31,7 +31,7 @@ public class DemoUp {
     private static int countRetry;
     private static ObservableEmitter<UploadHelper.UploadProgress> emitter;
 
-    public static Observable<UploadHelper.UploadProgress> uploadFiles(final List<String> lstFile) {
+    public static Observable<UploadHelper.UploadProgress> uploadFilesOld(final List<String> lstFile) {
         return Observable.create(new ObservableOnSubscribe<UploadHelper.UploadProgress>() {
             long totalUploaded = 0;
             long realTotalUploaded = 0;
@@ -136,7 +136,7 @@ public class DemoUp {
     }
 
 
-    public static Observable<UploadHelper.UploadProgress> uploadFiles222(final List<String> lstFile) {
+    public static Observable<UploadHelper.UploadProgress> uploadFiles(final List<String> lstFile) {
         return Observable.create(new ObservableOnSubscribe<UploadHelper.UploadProgress>() {
             long totalUploaded = 0;
             long realTotalUploaded = 0;
@@ -187,7 +187,7 @@ public class DemoUp {
                         }
                     });
 
-                    boolean retryUpload = retryUpload(lastCall, countRetry, emitter);
+                    boolean retryUpload = retryUpload(lastCall, countRetry);
                     if (retryUpload) {
                         totalUploaded += (new File(path).length() - previousTotal);
                         realTotalUploaded = totalUploaded;
@@ -195,35 +195,42 @@ public class DemoUp {
                     } else break;
 
                 }
+
                 emitter.onComplete();
             }
         }).subscribeOn(Schedulers.io());
     }
 
-    private static boolean retryUpload(Call<SimpleUploadResponse> lastCall, int countRetry, ObservableEmitter<UploadHelper.UploadProgress> emitter) throws InterruptedException {
+    private static boolean retryUpload(Call<SimpleUploadResponse> lastCall, int countRetry) throws InterruptedException {
 
-        Log.i("retry", "RETRY UPLOAD:" + countRetry);
+        Log.i("retry", "VAO HAM UPLOAD:" + countRetry);
 
-        if (++countRetry > 2)
+        if (++countRetry > 3)
             return false;
 
         try {
-            Response response = lastCall.execute();
+            Log.i("retry", "SLEEP_BEGIN....***:" + countRetry);
+            Thread.sleep(8000);
+
+            Response response = lastCall.clone().execute();
             SimpleUploadResponse simpleUploadResponse = (SimpleUploadResponse) response.body();
 
             if (simpleUploadResponse == null || simpleUploadResponse.getCode() != 0) {
-                if (simpleUploadResponse != null)
-                    emitter.onError(new Throwable(simpleUploadResponse.getMessage()));
-                retryUpload(lastCall, countRetry, emitter);
+
+                Log.i("retry", "SLEEP....***:" + countRetry);
+                Thread.sleep(8000);
+                retryUpload(lastCall, countRetry);
             } else {
                 Log.i("retry", "Success:" + simpleUploadResponse.toString());
                 return true;
             }
         } catch (Exception err) {
-            retryUpload(lastCall, countRetry, emitter);
+            Log.i("retry", "SLEEP_CATCH....***:" + countRetry + "Err" + err.getMessage());
+            Thread.sleep(8000);
+            retryUpload(lastCall, countRetry);
         }
 
-        return false;
+        return true;
     }
 
     private static Call<SimpleUploadResponse> uploadSingleFile(String sessionId, @NonNull String filePath,
