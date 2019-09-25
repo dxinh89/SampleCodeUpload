@@ -166,29 +166,51 @@ public class DemoUp {
                 sessionId = infoResponse.getSessionId();
                 Log.i("ss", "SSID:" + sessionId);
 
-                int countRetry;
                 for (int i = 0; i < lstFile.size() && !emitter.isDisposed(); i++) {
 
-                    countRetry = 0;
-                    previousTotal = 0;
-
                     String path = lstFile.get(i);
-                    lastCall = uploadSingleFile(sessionId, path, realTotalUploaded, total, new UploadHelper.ProgressCallback() {
-                        @Override
-                        public void onProgressChanged(long uploadedBytes) {
-                            totalUploaded += (uploadedBytes - previousTotal);
-                            previousTotal = uploadedBytes;
-                            Log.i("emitter", "emitter----------->>>>:" + totalUploaded);
-                            emitter.onNext(new UploadHelper.UploadProgress(totalUploaded, totalSize));
-                        }
-                    });
+                    int retry = 0;
 
+                    while (retry < 3) {
+
+                        previousTotal = 0;
+                        try {
+                            lastCall = uploadSingleFile(sessionId, path, realTotalUploaded, total, uploadedBytes -> {
+                                totalUploaded += (uploadedBytes - previousTotal);
+                                previousTotal = uploadedBytes;
+                                Log.i("emitter", "emitter----------->>>>:" + totalUploaded);
+                                emitter.onNext(new UploadHelper.UploadProgress(totalUploaded, totalSize));
+                            });
+
+                            Response response = lastCall.execute();
+
+                            SimpleUploadResponse simpleUploadResponse = (SimpleUploadResponse) response.body();
+                            if (simpleUploadResponse != null && simpleUploadResponse.getCode() == 0) {
+                                totalUploaded += (new File(path).length() - previousTotal);
+                                realTotalUploaded = totalUploaded;
+                                break;
+                            }
+                        } catch (Exception err) {
+
+                        }
+                        retry++;
+                        Thread.sleep(600);
+                    }
+
+                    if (retry == 3) {
+                        lastCall.cancel();
+                        break;
+                    }
+
+                    /*
                     boolean isUploadSuccess = retryUpload(lastCall, countRetry);
                     if (isUploadSuccess) {
                         totalUploaded += (new File(path).length() - previousTotal);
                         realTotalUploaded = totalUploaded;
 
                     } else break;
+
+                     */
 
                 }
 
@@ -197,6 +219,7 @@ public class DemoUp {
         }).subscribeOn(Schedulers.io());
     }
 
+    /*
     private static boolean retryUpload(Call<SimpleUploadResponse> lastCall, int countRetry) throws InterruptedException {
 
         Log.i("retry", "VAO HAM UPLOAD:" + countRetry);
@@ -220,7 +243,7 @@ public class DemoUp {
             Thread.sleep(800);
             return retryUpload(lastCall, countRetry);
         }
-    }
+    }*/
 
     private static Call<SimpleUploadResponse> uploadSingleFile(String sessionId, @NonNull String filePath,
                                                                long totalUploaded, long totalSize, UploadHelper.ProgressCallback progressCallback) {
