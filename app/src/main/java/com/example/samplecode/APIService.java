@@ -2,13 +2,12 @@ package com.example.samplecode;
 
 import com.example.samplecode.models.SessionInfoResponse;
 import com.example.samplecode.models.SessionBody;
-import com.example.samplecode.models.SessionResponse;
+import com.example.samplecode.models.SessionResponse_REMOVE;
 import com.example.samplecode.models.SimpleUploadResponse;
 
 import io.reactivex.Single;
 import okhttp3.MultipartBody;
 import retrofit2.Call;
-import retrofit2.Response;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
@@ -21,7 +20,7 @@ import retrofit2.http.Path;
 public interface APIService {
 
     @POST("api/Upload/CreateUploadSession")
-    Call<SessionResponse> createSession1(@Header("token") String token, @Body SessionBody body);
+    Call<SessionResponse_REMOVE> createSession1(@Header("token") String token, @Body SessionBody body);
 
     //////////=========
 

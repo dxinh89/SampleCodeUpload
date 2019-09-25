@@ -5,11 +5,9 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.example.samplecode.models.ChecksumUtils;
 import com.example.samplecode.models.SessionBody;
 import com.example.samplecode.models.SessionInfoResponse;
 import com.example.samplecode.models.ProgressRequestBody;
-import com.example.samplecode.models.SessionResponse;
 import com.example.samplecode.models.SimpleUploadResponse;
 
 import java.io.File;
@@ -23,7 +21,6 @@ import io.reactivex.functions.Cancellable;
 import io.reactivex.schedulers.Schedulers;
 import okhttp3.MultipartBody;
 import retrofit2.Call;
-import retrofit2.Callback;
 import retrofit2.Response;
 
 public class DemoUp {
@@ -171,7 +168,6 @@ public class DemoUp {
 
                 int countRetry;
                 for (int i = 0; i < lstFile.size() && !emitter.isDisposed(); i++) {
-                    Log.i("retry", "Gia tri i=" + i);
 
                     countRetry = 0;
                     previousTotal = 0;
@@ -187,8 +183,8 @@ public class DemoUp {
                         }
                     });
 
-                    boolean retryUpload = retryUpload(lastCall, countRetry);
-                    if (retryUpload) {
+                    boolean isUploadSuccess = retryUpload(lastCall, countRetry);
+                    if (isUploadSuccess) {
                         totalUploaded += (new File(path).length() - previousTotal);
                         realTotalUploaded = totalUploaded;
 
@@ -209,28 +205,21 @@ public class DemoUp {
             return false;
 
         try {
-            Log.i("retry", "SLEEP_BEGIN....***:" + countRetry);
-            Thread.sleep(8000);
 
             Response response = lastCall.clone().execute();
             SimpleUploadResponse simpleUploadResponse = (SimpleUploadResponse) response.body();
 
             if (simpleUploadResponse == null || simpleUploadResponse.getCode() != 0) {
-
-                Log.i("retry", "SLEEP....***:" + countRetry);
-                Thread.sleep(8000);
-                retryUpload(lastCall, countRetry);
+                Thread.sleep(800);
+                return retryUpload(lastCall, countRetry);
             } else {
                 Log.i("retry", "Success:" + simpleUploadResponse.toString());
                 return true;
             }
         } catch (Exception err) {
-            Log.i("retry", "SLEEP_CATCH....***:" + countRetry + "Err" + err.getMessage());
-            Thread.sleep(8000);
-            retryUpload(lastCall, countRetry);
+            Thread.sleep(800);
+            return retryUpload(lastCall, countRetry);
         }
-
-        return true;
     }
 
     private static Call<SimpleUploadResponse> uploadSingleFile(String sessionId, @NonNull String filePath,

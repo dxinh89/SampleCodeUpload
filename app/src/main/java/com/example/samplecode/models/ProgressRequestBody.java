@@ -2,7 +2,6 @@ package com.example.samplecode.models;
 
 import android.os.Handler;
 import android.os.Looper;
-import android.util.Log;
 
 import java.io.File;
 import java.io.FileInputStream;

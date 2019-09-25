@@ -9,13 +9,13 @@ import android.net.NetworkInfo;
 import java.util.ArrayList;
 import java.util.List;
 
-public class NetworkStateReceiver extends BroadcastReceiver {
+public class NetworkStateReceiver_REMOVE extends BroadcastReceiver {
 
     private ConnectivityManager mManager;
     private List<NetworkStateReceiverListener> mListeners;
     private boolean mConnected;
 
-    public NetworkStateReceiver(Context context) {
+    public NetworkStateReceiver_REMOVE(Context context) {
         mListeners = new ArrayList<NetworkStateReceiverListener>();
         mManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         checkStateChanged();

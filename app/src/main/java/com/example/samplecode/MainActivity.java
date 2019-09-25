@@ -19,15 +19,13 @@ import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.example.samplecode.models.ChecksumUtils;
-import com.example.samplecode.models.NetworkStateReceiver;
+import com.example.samplecode.models.NetworkStateReceiver_REMOVE;
 import com.example.samplecode.models.ProgressRequestBody;
 import com.example.samplecode.models.SessionBody;
-import com.example.samplecode.models.SessionResponse;
-import com.example.samplecode.models.SimpleUploadResponse;
+import com.example.samplecode.models.SessionResponse_REMOVE;
 import com.example.samplecode.models.SplitFileUtils;
 
 import java.io.File;
@@ -44,7 +42,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener, ProgressRequestBody.UploadCallbacks, NetworkStateReceiver.NetworkStateReceiverListener {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener, ProgressRequestBody.UploadCallbacks, NetworkStateReceiver_REMOVE.NetworkStateReceiverListener {
 
     static final String[] PERMISSIONS_STORAGE = new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE};
     static final int REQUEST_EXTERNAL_STORAGE = 601;
@@ -81,7 +79,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         //progressBar = findViewById(R.id.progressBar);
 
-        NetworkStateReceiver networkStateReceiver = new NetworkStateReceiver(this);
+        NetworkStateReceiver_REMOVE networkStateReceiver = new NetworkStateReceiver_REMOVE(this);
         networkStateReceiver.addListener(this);
     }
 
@@ -175,9 +173,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 Log.i("UPLOAD", "size=" + totalSize + "-md5=" + md5);
 
                 APIService apiService = RetrofitClientInstance.getRetrofitInstance().create(APIService.class);
-                apiService.createSession1(DEFAULT_TEST_TOKEN, new SessionBody(md5, totalSize)).enqueue(new Callback<SessionResponse>() {
+                apiService.createSession1(DEFAULT_TEST_TOKEN, new SessionBody(md5, totalSize)).enqueue(new Callback<SessionResponse_REMOVE>() {
                     @Override
-                    public void onResponse(Call<SessionResponse> call, Response<SessionResponse> response) {
+                    public void onResponse(Call<SessionResponse_REMOVE> call, Response<SessionResponse_REMOVE> response) {
                         if (response.isSuccessful()) {
                             if (response.body() != null) {
                                 mSessionId = response.body().getSessionId(); //"F4D47F65091619091550679408";
@@ -193,7 +191,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     }
 
                     @Override
-                    public void onFailure(Call<SessionResponse> call, Throwable t) {
+                    public void onFailure(Call<SessionResponse_REMOVE> call, Throwable t) {
                         Log.i("UPLOAD", "ERR=" + t.getMessage());
                     }
                 });

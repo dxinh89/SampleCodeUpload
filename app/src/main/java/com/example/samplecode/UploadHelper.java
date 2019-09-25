@@ -5,10 +5,7 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
-import com.example.samplecode.models.ProgressRequestBody;
-import com.example.samplecode.models.SessionBody;
-import com.example.samplecode.models.SessionResponse;
-import com.example.samplecode.models.SimpleUploadResponse;
+import com.example.samplecode.models.SessionResponse_REMOVE;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -17,10 +14,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.Callable;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -29,24 +24,11 @@ import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
 import io.reactivex.ObservableOnSubscribe;
 import io.reactivex.ObservableSource;
-import io.reactivex.Scheduler;
 import io.reactivex.Single;
-import io.reactivex.SingleObserver;
-import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
-import io.reactivex.functions.Action;
 import io.reactivex.functions.Cancellable;
-import io.reactivex.functions.Consumer;
 import io.reactivex.functions.Function;
-import io.reactivex.functions.Predicate;
-import io.reactivex.internal.observers.ConsumerSingleObserver;
 import io.reactivex.schedulers.Schedulers;
-import okhttp3.MediaType;
-import okhttp3.MultipartBody;
-import okhttp3.RequestBody;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 public class UploadHelper {
     public static Observable<UploadProgress> uploadFeedbackAttachments(@NonNull List<String> filePathList, @NonNull String zipFileDir) {
@@ -241,21 +223,21 @@ public class UploadHelper {
         });
     }
 
-    private static Single<SessionResponse> createSession() {
+    private static Single<SessionResponse_REMOVE> createSession() {
         return Single.fromCallable(() -> {
 
             Log.i("UPLOAD", "----------- Vao tao session");
 
             APIService apiService = RetrofitClientInstance.getRetrofitInstance().create(APIService.class);
-//            Single<Response<SessionResponse>> responseSingle = apiService.createSession("D2-D8-A5-C2-12-48-BC-29-11-D5-34-39-76-9F-D7-1E-9F-F1-DB-92", new SessionBody("", 6000L));
-//            responseSingle.subscribeOn(Schedulers.io()).subscribeOn(AndroidSchedulers.mainThread()).subscribe(new SingleObserver<Response<SessionResponse>>() {
+//            Single<Response<SessionResponse_REMOVE>> responseSingle = apiService.createSession("D2-D8-A5-C2-12-48-BC-29-11-D5-34-39-76-9F-D7-1E-9F-F1-DB-92", new SessionBody("", 6000L));
+//            responseSingle.subscribeOn(Schedulers.io()).subscribeOn(AndroidSchedulers.mainThread()).subscribe(new SingleObserver<Response<SessionResponse_REMOVE>>() {
 //                @Override
 //                public void onSubscribe(Disposable d) {
 //                    Log.i("UPLOAD", "-----------A");
 //                }
 //
 //                @Override
-//                public void onSuccess(Response<SessionResponse> sessionResponseResponse) {
+//                public void onSuccess(Response<SessionResponse_REMOVE> sessionResponseResponse) {
 //                    Log.i("UPLOAD", "-----------B");
 //                }
 //
@@ -265,7 +247,7 @@ public class UploadHelper {
 //                }
 //            });
 
-            return new SessionResponse();
+            return new SessionResponse_REMOVE();
         });
     }
 

@@ -3,7 +3,7 @@ package com.example.samplecode.models;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-public class SessionResponse {
+public class SessionResponse_REMOVE {
 
     @SerializedName("sessionId")
     @Expose
