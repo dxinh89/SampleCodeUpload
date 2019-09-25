@@ -2,7 +2,6 @@ package com.example.samplecode;
 
 import com.example.samplecode.models.SessionInfoResponse;
 import com.example.samplecode.models.SessionBody;
-import com.example.samplecode.models.SessionResponse_REMOVE;
 import com.example.samplecode.models.SimpleUploadResponse;
 
 import io.reactivex.Single;
@@ -20,17 +19,12 @@ import retrofit2.http.Path;
 public interface APIService {
 
     @POST("api/Upload/CreateUploadSession")
-    Call<SessionResponse_REMOVE> createSession1(@Header("token") String token, @Body SessionBody body);
-
-    //////////=========
-
-    @POST("api/Upload/CreateUploadSession")
     Single<SessionInfoResponse> createSession(@Header("token") String token, @Body SessionBody body);
 
     @Multipart
     @PUT("api/Upload/UploadFile/{sessionId}")
     Call<SimpleUploadResponse> uploadSingleFile(@Header("token") String token, @Header("ContentLength") long ctLen, @Header("Content-Range") String ctRange,
-                                                @Path("sessionId") String sessionId, @Part MultipartBody.Part b);  //@Body RequestBody b
+                                                @Path("sessionId") String sessionId, @Part MultipartBody.Part b);
 
     @GET("api/Upload/UploadFile/{sessionId}")
     Single<SessionInfoResponse> getSessionInfo(

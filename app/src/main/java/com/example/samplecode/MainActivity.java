@@ -172,29 +172,29 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 String md5 = ChecksumUtils.checkSum(fileUploadPathZip);
                 Log.i("UPLOAD", "size=" + totalSize + "-md5=" + md5);
 
-                APIService apiService = RetrofitClientInstance.getRetrofitInstance().create(APIService.class);
-                apiService.createSession1(DEFAULT_TEST_TOKEN, new SessionBody(md5, totalSize)).enqueue(new Callback<SessionResponse_REMOVE>() {
-                    @Override
-                    public void onResponse(Call<SessionResponse_REMOVE> call, Response<SessionResponse_REMOVE> response) {
-                        if (response.isSuccessful()) {
-                            if (response.body() != null) {
-                                mSessionId = response.body().getSessionId(); //"F4D47F65091619091550679408";
-                                Log.i("UPLOAD", "SSID=" + mSessionId);
-
-                                //new UploadAsyncTask(getApplicationContext(), sessionId, fileUploadPathZip).execute();
-
-                                currentPart = 0;
-                                doUpload(DEFAULT_TEST_TOKEN, mSessionId, partFilePaths.get(currentPart)); // first load
-
-                            }
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(Call<SessionResponse_REMOVE> call, Throwable t) {
-                        Log.i("UPLOAD", "ERR=" + t.getMessage());
-                    }
-                });
+//                APIService apiService = RetrofitClientInstance.getRetrofitInstance().create(APIService.class);
+//                apiService.createSession1(DEFAULT_TEST_TOKEN, new SessionBody(md5, totalSize)).enqueue(new Callback<SessionResponse_REMOVE>() {
+//                    @Override
+//                    public void onResponse(Call<SessionResponse_REMOVE> call, Response<SessionResponse_REMOVE> response) {
+//                        if (response.isSuccessful()) {
+//                            if (response.body() != null) {
+//                                mSessionId = response.body().getSessionId(); //"F4D47F65091619091550679408";
+//                                Log.i("UPLOAD", "SSID=" + mSessionId);
+//
+//                                //new UploadAsyncTask(getApplicationContext(), sessionId, fileUploadPathZip).execute();
+//
+//                                currentPart = 0;
+//                                doUpload(DEFAULT_TEST_TOKEN, mSessionId, partFilePaths.get(currentPart)); // first load
+//
+//                            }
+//                        }
+//                    }
+//
+//                    @Override
+//                    public void onFailure(Call<SessionResponse_REMOVE> call, Throwable t) {
+//                        Log.i("UPLOAD", "ERR=" + t.getMessage());
+//                    }
+//                });
 
                 break;
         }

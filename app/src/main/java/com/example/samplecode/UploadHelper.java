@@ -54,7 +54,6 @@ public class UploadHelper {
                             int indexFileUploaded = 0;
                             int maxIndex = splitFileList.size();
 
-
                             @Override
                             public void subscribe(ObservableEmitter<UploadProgress> emitter) {
 
