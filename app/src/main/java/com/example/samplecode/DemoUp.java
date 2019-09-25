@@ -28,12 +28,15 @@ import retrofit2.Response;
 
 public class DemoUp {
     final static String token = "D2-D8-A5-C2-12-48-BC-29-11-D5-34-39-76-9F-D7-1E-9F-F1-DB-92";
+    private static int countRetry;
+    private static ObservableEmitter<UploadHelper.UploadProgress> emitter;
 
     public static Observable<UploadHelper.UploadProgress> uploadFiles(final List<String> lstFile) {
         return Observable.create(new ObservableOnSubscribe<UploadHelper.UploadProgress>() {
             long totalUploaded = 0;
             long realTotalUploaded = 0;
-            int previousTotal;
+            long previousTotal;
+
             Call<SimpleUploadResponse> lastCall;
 
             String sessionId = null;
@@ -41,8 +44,6 @@ public class DemoUp {
             @Override
             public void subscribe(ObservableEmitter<UploadHelper.UploadProgress> emitter) throws Exception {
                 long total = 0;
-                int countRetry = 0;
-                final int maxRetry = 3;
 
                 for (String path : lstFile) {
                     total += (new File(path).length());
@@ -58,32 +59,28 @@ public class DemoUp {
                     }
                 });
 
-                int maxSize = lstFile.size();
-                for (int i = 0; i < maxSize; i++) {
-                    if (emitter.isDisposed()) {
-                        break;
-                    }
-                    previousTotal = 0;
+                //CHECK/CREATE SESSION
+                SessionInfoResponse infoResponse = checkOrCreate(token, sessionId, totalSize).blockingGet();
+                sessionId = infoResponse.getSessionId();
+                Log.i("ss", "SSID:" + sessionId);
+//                long expirationTime = Long.valueOf(infoResponse.getExpirationDateTime());
+//                long currentTime = System.currentTimeMillis() / 1000L;
+//                if (currentTime > expirationTime)
+//                    sessionId = null;
 
-                    SessionInfoResponse infoResponse = checkOrCreate(token, sessionId, totalSize).blockingGet();
-
-                    long expirationTime = Long.valueOf(infoResponse.getExpirationDateTime());
-                    long currentTime = System.currentTimeMillis() / 1000L;
-
-                    if (currentTime > expirationTime)
-                        sessionId = null;
-
-                    if (sessionId == null)
-                        sessionId = infoResponse.getSessionId();
-                    Log.i("ss", "SSID:" + sessionId);
+                int countRetry = 0;
+                final int maxRetry = 3;
+                for (int i = 0; i < lstFile.size() && !emitter.isDisposed(); i++) {
                     Log.i("retry", "Gia tri i=" + i);
+
+                    previousTotal = 0;
 
                     String path = lstFile.get(i);
                     lastCall = uploadSingleFile(sessionId, path, realTotalUploaded, total, new UploadHelper.ProgressCallback() {
                         @Override
                         public void onProgressChanged(long uploadedBytes) {
                             totalUploaded += (uploadedBytes - previousTotal);
-                            previousTotal = (int) uploadedBytes;
+                            previousTotal = uploadedBytes;
                             Log.i("emitter", "emitter----------->>>>:" + totalUploaded);
                             emitter.onNext(new UploadHelper.UploadProgress(totalUploaded, totalSize));
                         }
@@ -107,7 +104,7 @@ public class DemoUp {
                                 Log.i("retry", "ctr:" + i + "- " + realTotalUploaded);
                                 i--;
                             } else {
-                                emitter.onError(new Throwable("Reupload Thất bại"));
+                                emitter.onError(new Throwable("Upload thất bại"));
                                 break;
                             }
                         } else {
@@ -138,7 +135,99 @@ public class DemoUp {
         }).subscribeOn(Schedulers.io());
     }
 
-    private static Call<SimpleUploadResponse> uploadSingleFile(String sessionId, @NonNull String filePath, long totalUploaded, long totalSize, UploadHelper.ProgressCallback progressCallback) {
+
+    public static Observable<UploadHelper.UploadProgress> uploadFiles222(final List<String> lstFile) {
+        return Observable.create(new ObservableOnSubscribe<UploadHelper.UploadProgress>() {
+            long totalUploaded = 0;
+            long realTotalUploaded = 0;
+            long previousTotal;
+
+            Call<SimpleUploadResponse> lastCall;
+
+            String sessionId = null;
+
+            @Override
+            public void subscribe(ObservableEmitter<UploadHelper.UploadProgress> emitter) throws Exception {
+                long total = 0;
+
+                for (String path : lstFile) {
+                    total += (new File(path).length());
+                }
+
+                final long totalSize = total;
+
+                emitter.setCancellable(new Cancellable() {
+                    @Override
+                    public void cancel() throws Exception {
+                        if (lastCall != null)
+                            lastCall.cancel();
+                    }
+                });
+
+                //CHECK/CREATE SESSION
+                SessionInfoResponse infoResponse = checkOrCreate(token, sessionId, totalSize).blockingGet();
+                sessionId = infoResponse.getSessionId();
+                Log.i("ss", "SSID:" + sessionId);
+
+                int countRetry;
+                for (int i = 0; i < lstFile.size() && !emitter.isDisposed(); i++) {
+                    Log.i("retry", "Gia tri i=" + i);
+
+                    countRetry = 0;
+                    previousTotal = 0;
+
+                    String path = lstFile.get(i);
+                    lastCall = uploadSingleFile(sessionId, path, realTotalUploaded, total, new UploadHelper.ProgressCallback() {
+                        @Override
+                        public void onProgressChanged(long uploadedBytes) {
+                            totalUploaded += (uploadedBytes - previousTotal);
+                            previousTotal = uploadedBytes;
+                            Log.i("emitter", "emitter----------->>>>:" + totalUploaded);
+                            emitter.onNext(new UploadHelper.UploadProgress(totalUploaded, totalSize));
+                        }
+                    });
+
+                    boolean retryUpload = retryUpload(lastCall, countRetry, emitter);
+                    if (retryUpload) {
+                        totalUploaded += (new File(path).length() - previousTotal);
+                        realTotalUploaded = totalUploaded;
+
+                    } else break;
+
+                }
+                emitter.onComplete();
+            }
+        }).subscribeOn(Schedulers.io());
+    }
+
+    private static boolean retryUpload(Call<SimpleUploadResponse> lastCall, int countRetry, ObservableEmitter<UploadHelper.UploadProgress> emitter) throws InterruptedException {
+
+        Log.i("retry", "RETRY UPLOAD:" + countRetry);
+
+        if (++countRetry > 2)
+            return false;
+
+        try {
+            Response response = lastCall.execute();
+            SimpleUploadResponse simpleUploadResponse = (SimpleUploadResponse) response.body();
+
+            if (simpleUploadResponse == null || simpleUploadResponse.getCode() != 0) {
+                if (simpleUploadResponse != null)
+                    emitter.onError(new Throwable(simpleUploadResponse.getMessage()));
+                retryUpload(lastCall, countRetry, emitter);
+            } else {
+                Log.i("retry", "Success:" + simpleUploadResponse.toString());
+                return true;
+            }
+        } catch (Exception err) {
+            retryUpload(lastCall, countRetry, emitter);
+        }
+
+        return false;
+    }
+
+    private static Call<SimpleUploadResponse> uploadSingleFile(String sessionId, @NonNull String filePath,
+                                                               long totalUploaded, long totalSize, UploadHelper.ProgressCallback progressCallback) {
         final File file = new File(filePath);
         long size = file.length();
 

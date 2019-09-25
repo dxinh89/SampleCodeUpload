@@ -54,7 +54,7 @@ public class SampleActivity extends AppCompatActivity {
 
 
 
-        DemoUp.uploadFiles(lstFileUp).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<UploadHelper.UploadProgress>() {
+        DemoUp.uploadFiles222(lstFileUp).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<UploadHelper.UploadProgress>() {
             @Override
             public void onSubscribe(Disposable d) {
                 uploadDisposable = d;
