@@ -197,10 +197,6 @@ public class DemoUp {
                         Thread.sleep(600);
                     }
 
-                    if (retry == 3) {
-                        lastCall.cancel();
-                        break;
-                    }
 
                     /*
                     boolean isUploadSuccess = retryUpload(lastCall, countRetry);
